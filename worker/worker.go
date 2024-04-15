@@ -6,10 +6,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/garnizeh/cube/task"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
-
-	"github.com/garnizeh/cube/task"
 )
 
 type Worker struct {
@@ -17,6 +16,14 @@ type Worker struct {
 	Queue     queue.Queue
 	Db        map[uuid.UUID]*task.Task
 	TaskCount int
+}
+
+func (w *Worker) GetTasks() []*task.Task {
+	tasks := []*task.Task{}
+	for _, t := range w.Db {
+		tasks = append(tasks, t)
+	}
+	return tasks
 }
 
 func (w *Worker) CollectStats() {
@@ -35,6 +42,7 @@ func (w *Worker) RunTask() task.DockerResult {
 	}
 
 	taskQueued := t.(task.Task)
+	fmt.Printf("Found task in queue: %v:\n", taskQueued)
 
 	taskPersisted := w.Db[taskQueued.ID]
 	if taskPersisted == nil {
@@ -50,10 +58,11 @@ func (w *Worker) RunTask() task.DockerResult {
 		case task.Completed:
 			result = w.StopTask(taskQueued)
 		default:
-			result.Error = errors.New("we should not get here")
+			fmt.Printf("This is a mistake. taskPersisted: %v, taskQueued: %v\n", taskPersisted, taskQueued)
+			result.Error = errors.New("We should not get here")
 		}
 	} else {
-		err := fmt.Errorf("invalid transition from %v to %v", taskPersisted.State, taskQueued.State)
+		err := fmt.Errorf("Invalid transition from %v to %v", taskPersisted.State, taskQueued.State)
 		result.Error = err
 		return result
 	}
@@ -61,11 +70,8 @@ func (w *Worker) RunTask() task.DockerResult {
 }
 
 func (w *Worker) StartTask(t task.Task) task.DockerResult {
-	t.StartTime = time.Now().UTC()
-
 	config := task.NewConfig(&t)
 	d := task.NewDocker(config)
-
 	result := d.Run()
 	if result.Error != nil {
 		log.Printf("Err running task %v: %v\n", t.ID, result.Error)
@@ -89,7 +95,6 @@ func (w *Worker) StopTask(t task.Task) task.DockerResult {
 	if result.Error != nil {
 		log.Printf("Error stopping container %v: %v\n", t.ContainerID, result.Error)
 	}
-
 	t.FinishTime = time.Now().UTC()
 	t.State = task.Completed
 	w.Db[t.ID] = &t
