@@ -6,10 +6,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/garnizeh/cube/task"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-
-	"github.com/garnizeh/cube/task"
 )
 
 func (a *Api) StartTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +33,12 @@ func (a *Api) StartTaskHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Added task %v\n", te.Task.ID)
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(te.Task)
+}
+
+func (a *Api) GetStatsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(a.Worker.Stats)
 }
 
 func (a *Api) GetTasksHandler(w http.ResponseWriter, r *http.Request) {

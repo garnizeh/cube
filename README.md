@@ -39,3 +39,8 @@ localhost:5555/tasks
 ```
 curl -v --request DELETE "localhost:5555/tasks/266592cd-960d-4091-981c-8c25c44b1018"
 ```
+
+### read stats
+```
+curl localhost:5555/stats|jq .
+```
