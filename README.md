@@ -8,10 +8,10 @@ export DOCKER_API_VERSION=1.44
 ```
 ## Run local
 ```
-CUBE_HOST=localhost CUBE_PORT=5555 go run main.go
+CUBE_WORKER_HOST=localhost CUBE_WORKER_PORT=5555 CUBE_MANAGER_HOST=localhost CUBE_MANAGER_PORT=5556 go run main.go
 ```
 
-## Client API
+## Worker API
 
 ### list all tasks
 ```
@@ -43,4 +43,26 @@ curl -v --request DELETE "localhost:5555/tasks/266592cd-960d-4091-981c-8c25c44b1
 ### read stats
 ```
 curl localhost:5555/stats|jq .
+```
+
+## Manager API
+
+### list all tasks
+```
+curl -v localhost:5556/tasks
+```
+
+### add new task
+```
+curl -v --request POST --header 'Content-Type: application/json' --data @task.json localhost:5556/tasks
+```
+
+### delete a task
+```
+curl -v --request DELETE "localhost:5556/tasks/6be4cb6b-61d1-40cb-bc7b-9cacefefa60c"
+```
+
+### read stats
+```
+curl localhost:5556/stats|jq .
 ```
